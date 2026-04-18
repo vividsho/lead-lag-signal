@@ -1,0 +1,36 @@
+name: 毎日シグナル更新
+
+on:
+  schedule:
+    # 毎営業日 朝7時（日本時間）に実行 = UTC 22:00
+    - cron: '0 22 * * 1-5'
+  workflow_dispatch:  # 手動実行ボタンも使えるようにする
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: ライブラリをインストール
+        run: pip install yfinance numpy pandas
+
+      - name: シグナルを計算してHTMLを生成
+        run: python lead_lag_signal.py
+
+      - name: GitHubにアップロード
+        run: |
+          git config user.name "vividsho"
+          git config user.email "vividsho2@gmail.com"
+          git add signal_dashboard.html
+          git diff --cached --quiet || git commit -m "update signal $(date +'%Y-%m-%d')"
+          git push
