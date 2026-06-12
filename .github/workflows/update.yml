@@ -24,8 +24,8 @@ jobs:
       - name: ライブラリをインストール
         run: pip install yfinance numpy pandas
 
-      - name: シグナルを計算してHTMLを生成
-        run: python lead_lag_signal.py
+      - name: 勢いランキングを計算してHTMLを生成
+        run: python sector_momentum.py
 
       - name: GitHubにアップロード
         run: |
