@@ -6,11 +6,15 @@
   中期: 直近1〜6ヶ月の勢い（1〜3ヶ月の保有想定。週1チェック向け）
   長期: 骨太の方針2026（政府の17戦略分野・官民370兆円投資）のテーマ銘柄
 
+短期・中期の対象銘柄は、JPX（日本取引所グループ）公式の上場銘柄一覧から
+TOPIX500（大型100＋中型400銘柄）を毎回自動で取り込みます。
+手動の銘柄リスト管理は不要です（長期テーマの銘柄のみ手動管理）。
+
 どのランキングも「リスク調整後スコア」= 勢い ÷ 値動きの荒さ で並べます。
 急騰しただけの荒い銘柄より、安定して上がっている銘柄が上に来ます。
 
 使い方:
-  pip install yfinance numpy pandas
+  pip install yfinance numpy pandas xlrd
   python sector_momentum.py
 
 実行すると signal_dashboard.html が生成・更新されます。
@@ -55,170 +59,58 @@ JP_TICKERS = {
     "1633.T": "不動産",
 }
 
-# 各セクターの代表銘柄（東証プライムの大型・流動性の高い銘柄から選定）
-JP_STOCKS = {
-    "1617.T": [  # 食品
-        ("2914.T", "JT（日本たばこ産業）"),
-        ("2802.T", "味の素"),
-        ("2502.T", "アサヒグループHD"),
-        ("2503.T", "キリンHD"),
-        ("2269.T", "明治HD"),
-        ("2801.T", "キッコーマン"),
-        ("2587.T", "サントリー食品"),
-        ("2282.T", "日本ハム"),
-    ],
-    "1618.T": [  # エネルギー資源
-        ("1605.T", "INPEX"),
-        ("5020.T", "ENEOSホールディングス"),
-        ("5019.T", "出光興産"),
-        ("5021.T", "コスモエネルギーHD"),
-        ("1662.T", "石油資源開発"),
-    ],
-    "1619.T": [  # 建設・資材
-        ("1925.T", "大和ハウス工業"),
-        ("1928.T", "積水ハウス"),
-        ("1812.T", "鹿島建設"),
-        ("1801.T", "大成建設"),
-        ("1802.T", "大林組"),
-        ("1803.T", "清水建設"),
-        ("5201.T", "AGC"),
-        ("5233.T", "太平洋セメント"),
-    ],
-    "1620.T": [  # 素材・化学
-        ("4063.T", "信越化学工業"),
-        ("4452.T", "花王"),
-        ("4901.T", "富士フイルムHD"),
-        ("4188.T", "三菱ケミカルグループ"),
-        ("3407.T", "旭化成"),
-        ("4911.T", "資生堂"),
-        ("4005.T", "住友化学"),
-        ("6988.T", "日東電工"),
-    ],
-    "1621.T": [  # 医薬品
-        ("4502.T", "武田薬品工業"),
-        ("4568.T", "第一三共"),
-        ("4519.T", "中外製薬"),
-        ("4503.T", "アステラス製薬"),
-        ("4523.T", "エーザイ"),
-        ("4578.T", "大塚HD"),
-        ("4507.T", "塩野義製薬"),
-        ("4151.T", "協和キリン"),
-    ],
-    "1622.T": [  # 自動車・輸送機
-        ("7203.T", "トヨタ自動車"),
-        ("7267.T", "ホンダ"),
-        ("6902.T", "デンソー"),
-        ("7269.T", "スズキ"),
-        ("5108.T", "ブリヂストン"),
-        ("7270.T", "SUBARU"),
-        ("7272.T", "ヤマハ発動機"),
-        ("7259.T", "アイシン"),
-    ],
-    "1623.T": [  # 鉄鋼・非鉄
-        ("5401.T", "日本製鉄"),
-        ("5411.T", "JFEホールディングス"),
-        ("5713.T", "住友金属鉱山"),
-        ("5802.T", "住友電気工業"),
-        ("5801.T", "古河電気工業"),
-        ("5711.T", "三菱マテリアル"),
-        ("5406.T", "神戸製鋼所"),
-    ],
-    "1624.T": [  # 機械
-        ("6301.T", "小松製作所（コマツ）"),
-        ("6367.T", "ダイキン工業"),
-        ("6273.T", "SMC"),
-        ("6326.T", "クボタ"),
-        ("7011.T", "三菱重工業"),
-        ("7013.T", "IHI"),
-        ("6361.T", "荏原製作所"),
-        ("6113.T", "アマダ"),
-    ],
-    "1625.T": [  # 電機・精密
-        ("8035.T", "東京エレクトロン"),
-        ("6758.T", "ソニーグループ"),
-        ("6501.T", "日立製作所"),
-        ("6861.T", "キーエンス"),
-        ("6981.T", "村田製作所"),
-        ("6857.T", "アドバンテスト"),
-        ("6954.T", "ファナック"),
-        ("7741.T", "HOYA"),
-        ("6594.T", "ニデック"),
-        ("7751.T", "キヤノン"),
-    ],
-    "1626.T": [  # 情報通信・サービス他
-        ("9432.T", "NTT"),
-        ("9433.T", "KDDI"),
-        ("9984.T", "ソフトバンクグループ"),
-        ("9434.T", "ソフトバンク"),
-        ("6098.T", "リクルートHD"),
-        ("7974.T", "任天堂"),
-        ("4661.T", "オリエンタルランド"),
-        ("4307.T", "野村総合研究所"),
-    ],
-    "1627.T": [  # 電力・ガス
-        ("9501.T", "東京電力HD"),
-        ("9503.T", "関西電力"),
-        ("9502.T", "中部電力"),
-        ("9531.T", "東京ガス"),
-        ("9532.T", "大阪ガス"),
-        ("9508.T", "九州電力"),
-    ],
-    "1628.T": [  # 運輸・物流
-        ("9022.T", "JR東海"),
-        ("9020.T", "JR東日本"),
-        ("9021.T", "JR西日本"),
-        ("9101.T", "日本郵船"),
-        ("9104.T", "商船三井"),
-        ("9107.T", "川崎汽船"),
-        ("9201.T", "日本航空（JAL）"),
-        ("9202.T", "ANAホールディングス"),
-        ("9064.T", "ヤマトHD"),
-    ],
-    "1629.T": [  # 商社・卸売
-        ("8058.T", "三菱商事"),
-        ("8031.T", "三井物産"),
-        ("8001.T", "伊藤忠商事"),
-        ("8053.T", "住友商事"),
-        ("8002.T", "丸紅"),
-        ("8015.T", "豊田通商"),
-        ("2768.T", "双日"),
-    ],
-    "1630.T": [  # 小売
-        ("9983.T", "ファーストリテイリング"),
-        ("3382.T", "セブン&アイHD"),
-        ("8267.T", "イオン"),
-        ("9843.T", "ニトリHD"),
-        ("7532.T", "パン・パシフィックHD"),
-        ("3092.T", "ZOZO"),
-        ("3088.T", "マツキヨココカラ"),
-    ],
-    "1631.T": [  # 銀行
-        ("8306.T", "三菱UFJフィナンシャルG"),
-        ("8316.T", "三井住友フィナンシャルG"),
-        ("8411.T", "みずほフィナンシャルG"),
-        ("8308.T", "りそなHD"),
-        ("7186.T", "コンコルディアFG"),
-        ("8331.T", "千葉銀行"),
-    ],
-    "1632.T": [  # 金融（除く銀行）
-        ("8766.T", "東京海上HD"),
-        ("8750.T", "第一生命HD"),
-        ("8725.T", "MS&ADインシュアランスG"),
-        ("8630.T", "SOMPOホールディングス"),
-        ("8604.T", "野村HD"),
-        ("8601.T", "大和証券グループ本社"),
-        ("8591.T", "オリックス"),
-        ("8697.T", "日本取引所グループ"),
-    ],
-    "1633.T": [  # 不動産
-        ("8801.T", "三井不動産"),
-        ("8802.T", "三菱地所"),
-        ("8830.T", "住友不動産"),
-        ("3289.T", "東急不動産HD"),
-        ("8804.T", "東京建物"),
-        ("3231.T", "野村不動産HD"),
-    ],
-}
+# ── 対象銘柄リスト（JPX公式・TOPIX500） ────────────────────
+# JPXが毎月公表する「東証上場銘柄一覧」(data_j.xls) から、規模区分が
+# TOPIX Core30 / Large70 / Mid400 の500銘柄を取り込む。
+# 取得成功時は topix500_list.csv に保存し、取得失敗時はその前回分を使う。
+JPX_LIST_URL = ("https://www.jpx.co.jp/markets/statistics-equities/misc/"
+                "tvdivq0000001vg2-att/data_j.xls")
+LIST_CACHE    = "topix500_list.csv"
+SIZE_TOPIX500 = {"TOPIX Core30", "TOPIX Large70", "TOPIX Mid400"}
+
+
+def fetch_topix500():
+    """TOPIX500の銘柄一覧を取得する。
+
+    Returns
+    -------
+    list of (ティッカー, 銘柄名, 対応するセクターETFコード)
+    """
+    import io
+    import unicodedata
+    import urllib.request
+    try:
+        req = urllib.request.Request(
+            JPX_LIST_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            df = pd.read_excel(io.BytesIO(resp.read()), dtype=str)
+        df = df[df["規模区分"].isin(SIZE_TOPIX500)]
+        rows = []
+        for _, r in df.iterrows():
+            code = str(r["コード"]).strip()
+            name = unicodedata.normalize("NFKC", str(r["銘柄名"])).strip()
+            sec_code = int(float(r["17業種コード"]))
+            if not 1 <= sec_code <= 17:
+                continue
+            # TOPIX-17 ETFのコード(1617〜1633)は17業種コード(1〜17)と同順
+            rows.append((f"{code}.T", name, f"{1616 + sec_code}.T"))
+        if len(rows) < 300:
+            raise ValueError(f"銘柄数が少なすぎます（{len(rows)}銘柄）")
+        pd.DataFrame(rows, columns=["ticker", "name", "sector_etf"]).to_csv(
+            LIST_CACHE, index=False, encoding="utf-8")
+        print(f"  JPX公式リストから取得: {len(rows)}銘柄")
+        return rows
+    except Exception as e:
+        print(f"  JPXリストの取得に失敗: {e}")
+        try:
+            df = pd.read_csv(LIST_CACHE, dtype=str)
+            rows = [tuple(t) for t in df.itertuples(index=False, name=None)]
+            print(f"  前回保存したリスト（{LIST_CACHE}）を使用: {len(rows)}銘柄")
+            return rows
+        except OSError:
+            print(f"  前回保存したリスト（{LIST_CACHE}）もありません")
+            sys.exit(1)
+
 
 # ── 長期テーマ（骨太の方針2026より） ──────────────────────
 # 政府が2026年6月30日に示した「経済財政運営と改革の基本方針2026（骨太の方針）」
@@ -232,6 +124,8 @@ LONG_THEMES = {
         ("6146.T", "ディスコ"),
         ("6723.T", "ルネサスエレクトロニクス"),
         ("6981.T", "村田製作所"),
+        ("6762.T", "TDK"),
+        ("6976.T", "太陽誘電"),
     ],
     "防衛・航空宇宙": [
         ("7011.T", "三菱重工業"),
@@ -289,13 +183,6 @@ LONG_THEMES = {
         ("6988.T", "日東電工"),
     ],
 }
-
-# 銘柄コード → セクター名（表示用）
-CODE_SECTOR = {}
-for _sec, _rows in JP_STOCKS.items():
-    for _code, _ in _rows:
-        CODE_SECTOR.setdefault(_code, JP_TICKERS[_sec])
-
 
 def clean_prices(prices: pd.DataFrame, max_dev: float = 0.3) -> pd.DataFrame:
     """データ取得元の異常値（桁違いの価格など）を除去する。
@@ -412,31 +299,34 @@ def rank_sectors(etf_prices: pd.DataFrame):
     return ranking, n_top
 
 
-def analyze_stocks(prices: pd.DataFrame):
+def analyze_stocks(prices: pd.DataFrame, stock_list: list):
     """全銘柄の短期・中期・長期指標をまとめて計算する。
+
+    Parameters
+    ----------
+    stock_list : list of (ティッカー, 銘柄名, セクターETFコード)  TOPIX500
 
     Returns
     -------
-    short_rows : list 短期指標（セクター登録銘柄）
-    mid_rows   : list 中期指標（セクター登録銘柄）
+    short_rows : list 短期指標（TOPIX500）
+    mid_rows   : list 中期指標（TOPIX500）
     mid_by_sec : dict {sector: [銘柄情報, ...]} セクターごとの中期上位
     long_rows  : dict {テーマ: [銘柄情報, ...]} 長期テーマ別
     """
     short_rows, mid_rows = [], []
     seen = set()
-    for sec, stocks in JP_STOCKS.items():
-        for code, name in stocks:
-            if code in seen or code not in prices.columns:
-                continue
-            seen.add(code)
-            base = {"code": code, "name": name,
-                    "sector": CODE_SECTOR.get(code, "")}
-            ms = short_metrics(prices[code])
-            if ms is not None:
-                short_rows.append({**base, **ms})
-            mm = mid_metrics(prices[code])
-            if mm is not None:
-                mid_rows.append({**base, **mm, "sec_key": sec})
+    for code, name, sec in stock_list:
+        if code in seen or code not in prices.columns:
+            continue
+        seen.add(code)
+        base = {"code": code, "name": name,
+                "sector": JP_TICKERS.get(sec, "")}
+        ms = short_metrics(prices[code])
+        if ms is not None:
+            short_rows.append({**base, **ms})
+        mm = mid_metrics(prices[code])
+        if mm is not None:
+            mid_rows.append({**base, **mm, "sec_key": sec})
 
     mid_by_sec = {}
     for r in mid_rows:
@@ -448,6 +338,7 @@ def analyze_stocks(prices: pd.DataFrame):
         picked.sort(key=lambda r: r["adj"], reverse=True)
         mid_by_sec[sec] = picked[:STOCK_TOP_N]
 
+    code_sector = {code: JP_TICKERS.get(sec, "") for code, _, sec in stock_list}
     long_rows = {}
     for theme, stocks in LONG_THEMES.items():
         rows = []
@@ -458,7 +349,7 @@ def analyze_stocks(prices: pd.DataFrame):
             if ml is None:
                 continue
             ml.update({"code": code, "name": name,
-                       "sector": CODE_SECTOR.get(code, "")})
+                       "sector": code_sector.get(code, "")})
             rows.append(ml)
         rows.sort(key=lambda r: r["adj"], reverse=True)
         long_rows[theme] = rows
@@ -522,7 +413,7 @@ def build_html(ranking, n_top, short_top, mid_top, mid_by_sec, long_rows,
         short_sec = (
             f'<div class="sec"><div class="sec-t st-short">短期（数日〜数週間）'
             f'きょう買うなら Top5</div>'
-            f'<div class="sec-note">直近1週間・1ヶ月の勢いを値動きの荒さで割り引いた順。'
+            f'<div class="sec-note">TOPIX500から、直近1週間・1ヶ月の勢いを値動きの荒さで割り引いた順。'
             f'短期枠は値動きの大きい銘柄が入りやすく、<b>急落リスクも大きめ</b>です。'
             f'少額で・逆指値（損切りライン）を決めて使ってください。</div>\n'
             f'{top5_table(short_top, "1ヶ月", "r20", "t5-short")}</div>\n'
@@ -533,7 +424,7 @@ def build_html(ranking, n_top, short_top, mid_top, mid_by_sec, long_rows,
     if mid_top:
         mid_sec = (
             f'<div class="sec"><div class="sec-t">中期（1〜3ヶ月）今週の注目銘柄 Top5</div>'
-            f'<div class="sec-note">登録している全17業種・約130銘柄から、上昇トレンド中で'
+            f'<div class="sec-note">TOPIX500（大型・中型500銘柄、JPX公式リストから自動取込）から、上昇トレンド中で'
             f'「安定度」（勢い÷値動きの荒さ）の高い順に5銘柄。'
             f'急騰しただけの荒い銘柄は下がり、じわじわ安定して上がる銘柄が上に来ます。</div>\n'
             f'{top5_table(mid_top, "3ヶ月", "r3", "")}</div>\n'
@@ -738,7 +629,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans",sa
 {stock_html}</div>
 {long_sec}<div class="sec"><div class="sec-t">全セクターの勢い（月あたり%）</div>
 <div class="chart-box"><canvas id="cv"></canvas></div></div>
-<div class="disc"><strong>⚠ 注意:</strong> 本ツールは過去の値動き（モメンタム＝勢いは続きやすいという経験則）と、政府の公表資料（骨太の方針2026）に基づく研究・教育目的のプロトタイプであり、投資助言・推奨ではありません。銘柄はあらかじめ登録した大型株リストから機械的に抽出しており、企業業績・ニュース・バリュエーション等は一切考慮していません。「安定度」は過去の値動きの荒さで割り引いた指標であり、将来の急落を防ぐものではありません。政府のテーマに沿った銘柄が上がる保証もありません。過去のパフォーマンスは将来の成果を保証しません。実際の投資判断はご自身の責任で行ってください。</div>
+<div class="disc"><strong>⚠ 注意:</strong> 本ツールは過去の値動き（モメンタム＝勢いは続きやすいという経験則）と、政府の公表資料（骨太の方針2026）に基づく研究・教育目的のプロトタイプであり、投資助言・推奨ではありません。銘柄はTOPIX500（JPX公表の大型・中型500銘柄）から機械的に抽出しており、企業業績・ニュース・バリュエーション等は一切考慮していません。「安定度」は過去の値動きの荒さで割り引いた指標であり、将来の急落を防ぐものではありません。政府のテーマに沿った銘柄が上がる保証もありません。過去のパフォーマンスは将来の成果を保証しません。実際の投資判断はご自身の責任で行ってください。</div>
 </div>
 <script>
 const D={chart_data};
@@ -785,10 +676,10 @@ def main():
         sys.exit(1)
     print(f"  セクターETF: {len(ranking)}業種")
 
-    # セクター登録銘柄 + 長期テーマ銘柄をまとめて取得
-    codes = []
-    for stocks in JP_STOCKS.values():
-        codes += [c for c, _ in stocks]
+    # TOPIX500 + 長期テーマ銘柄をまとめて取得
+    print("銘柄リスト取得中...")
+    stock_list = fetch_topix500()
+    codes = [c for c, _, _ in stock_list]
     for stocks in LONG_THEMES.values():
         codes += [c for c, _ in stocks]
     codes = list(dict.fromkeys(codes))
@@ -800,7 +691,7 @@ def main():
         print(f"データ取得エラー: {e}")
         sys.exit(1)
 
-    short_rows, mid_rows, mid_by_sec, long_rows = analyze_stocks(prices)
+    short_rows, mid_rows, mid_by_sec, long_rows = analyze_stocks(prices, stock_list)
     short_top = pick_top(short_rows)
     mid_top   = pick_top(mid_rows)
 

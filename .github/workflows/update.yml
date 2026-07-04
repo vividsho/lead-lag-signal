@@ -23,7 +23,7 @@ jobs:
           python-version: '3.12'
 
       - name: ライブラリをインストール
-        run: pip install yfinance numpy pandas
+        run: pip install yfinance numpy pandas xlrd
 
       - name: 勢いランキングを計算してHTMLを生成
         run: python sector_momentum.py
@@ -32,6 +32,6 @@ jobs:
         run: |
           git config user.name "vividsho"
           git config user.email "vividsho2@gmail.com"
-          git add signal_dashboard.html
+          git add signal_dashboard.html topix500_list.csv
           git diff --cached --quiet || git commit -m "update signal $(date +'%Y-%m-%d')"
           git push
